@@ -1,17 +1,31 @@
 <?php
+
 require_once("../../db/connection.php");
 require_once("../helper/header.php");
 require_once("source/categoryList.php");
+
 ?>
+
+
 
 <div class="container">
     <div class="row">
         <div class="col-6 offset-3">
-            <form action="" method="post">
+            <div class="d-flex justify-content-end">
+                <a href="list.php" class="btn btn-secondary text-white m-3 rounded shadow-sm">Product List</a>
+            </div>
+            <form action="" method="post" enctype="multipart/form-data">
                 <div class="d-flex justify-content-center my-2">
                     <img src="" id="output" class=" w-50">
                 </div>
                 <input type="file" name="image" id="" class="form-control my-2 w-100" onChange="loadFile(event)">
+                <?php
+                   if(isset($_POST['create-btn'])){
+                    $imageStatus=$_FILES['image']['name'] == "" ? false : true;
+                    echo $imageStatus ? "" : "<small class='text-danger'>Product image is required!</small>";
+                   } 
+
+                ?>
 
                 <input type="text" name="name" value="<?php echo $_POST['name'] ?? ''; ?>" class="form-control my-2 w-100" placeholder="Enter Product Name...">
                 <?php
@@ -57,10 +71,37 @@ require_once("source/categoryList.php");
                 
                
             </form>
+
+             <?php
+                if(isset($_REQUEST['create-btn'])){
+                    if($imageStatus && $nameStatus && $priceStatus && $descriptionStatus && $categoryStatus){
+                        $imageName=uniqid().$_FILES['image']['name'];
+                        $tmpName=$_FILES['image']['tmp_name'];
+                        $targetFile="../../image/".$imageName;
+                        move_uploaded_file($tmpName, $targetFile);
+
+                        $productName=$_REQUEST['name'];
+                        $productPrice=$_REQUEST['price'];
+                        $productDescription=$_REQUEST['description'];
+                        $categoryId=$_REQUEST['categoryId'];
+
+                        $productQuery="INSERT INTO product (name,price,image,description,category_id) VALUES(?,?,?,?,?)";
+                        $productRes=$pdo->prepare($productQuery);
+                        $productRes->execute([$productName,$productPrice,$imageName,$productDescription,$categoryId]);
+
+                        header("Location:list.php");
+                    }
+                }
+
+            ?>
+
+
+          
         </div>
     </div>
 </div>
 
+ 
 
 <?php
 require_once("../helper/footer.php");
